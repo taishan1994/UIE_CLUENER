@@ -1,0 +1,2 @@
+# UIE_CLUENER
+用百度的UIE解决CLUENER2020细粒度实体识别数据集。
