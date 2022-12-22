@@ -27,7 +27,7 @@ test.json里面只有数据，没有对应的标签，格式为：
 {"id": 0, "text": "四川敦煌学”。近年来，丹棱县等地一些不知名的石窟迎来了海内外的游客，他们随身携带着胡文和的著作。"}
 ```
 
-进入到text目录下。process.py里面有两个函数，process_cluener_main()用于将数据处理成doccano标注的格式，show_cluener_doccano_txt()后面再讲，可以在运行时先注释掉。运行后得到data/cluener下的train_diccano.json和dev_doccano.json，里面的数据格式为：
+进入到text目录下。process.py里面有两个函数，process_cluener_main()用于将数据处理成doccano标注的格式，show_cluener_doccano_txt()后面再讲，可以在运行时先注释掉。运行后得到data/cluener下的train_doccano.json和dev_doccano.json，里面的数据格式为：
 
 ```python
 {"id": 0, "text": "彭小军认为，国内银行现在走的是台湾的发卡模式，先通过跑马圈地再在圈的地里面选择客户，", "relations": [], "entities": [{"id": 0, "label": "人名", "start_offset": 0, "end_offset": 3}, {"id": 1, "label": "地址", "start_offset": 15, "end_offset": 17}]}
