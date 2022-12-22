@@ -197,7 +197,7 @@ mv ../data/cluener/train1.txt ../data/cluener/train.txt
 mv ../data/cluener/test1.txt ../data/cluener/test.txt
 ```
 
-因为doccano.py一定会生成train.txt、dev.txt和test.txt，为了避免对dev_doccano.json处理时避免覆盖，采取了先重命名再改回来的策略。如果是windows系统，可以自己手动对文件进行修改。
+因为doccano.py一定会生成train.txt、dev.txt和test.txt，对dev_doccano.json处理时为了避免覆盖，采取了先重命名再改回来的策略。如果是windows系统，可以自己手动对文件进行修改。
 
 train.txt、dev.txt和test.txt是训练需要的数据，里面的格式为：
 
