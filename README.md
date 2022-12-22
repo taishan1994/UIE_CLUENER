@@ -212,7 +212,7 @@ train.txt、dev.txt和test.txt是训练需要的数据，里面的格式为：
 训练模型：
 
 ```python
-!python finetune.py  \
+python finetune.py  \
     --device gpu \
     --logging_steps 100 \
     --save_steps 100 \
@@ -241,7 +241,7 @@ train.txt、dev.txt和test.txt是训练需要的数据，里面的格式为：
 验证模型：
 
 ```python
-!python evaluate.py \
+python evaluate.py \
     --model_path ./checkpoint/model_best/checkpoint-1800/ \
     --test_path ../data/cluener/dev.txt \
     --batch_size 128 \
@@ -255,7 +255,7 @@ train.txt、dev.txt和test.txt是训练需要的数据，里面的格式为：
 展示每类实体的分数：
 
 ```python
-!python evaluate.py \
+python evaluate.py \
     --model_path ./checkpoint/model_best/checkpoint-1800/ \
     --test_path ../data/cluener/dev.txt \
     --batch_size 128 \
