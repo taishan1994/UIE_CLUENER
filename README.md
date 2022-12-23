@@ -381,7 +381,7 @@ text/process.py中的show_cluener_doccano_txt()用于统计转换后的test.txt�
 进入到text下，根据有标签的数据训练一个模型：
 
 ```python
-!python finetune.py  \
+python finetune.py  \
     --device gpu \
     --logging_steps 100 \
     --save_steps 100 \
@@ -481,7 +481,7 @@ python data_distill.py \
 评估教师模型：
 
 ```python
-!python evaluate_teacher.py \
+python evaluate_teacher.py \
     --task_type entity_extraction \
     --test_path /content/drive/MyDrive/project/FewNer/data/student_data/dev_data.json \
     --label_maps_path /content/drive/MyDrive/project/FewNer/data/student_data/label_maps.json \
@@ -497,7 +497,7 @@ python data_distill.py \
 根据预测的数据训练模型：
 
 ```python
-!python train.py \
+python train.py \
     --task_type entity_extraction \
     --train_path /content/drive/MyDrive/project/FewNer/data/student_data/train_data.json \
     --dev_path /content/drive/MyDrive/project/FewNer/data/student_data/dev_data.json \
@@ -515,7 +515,7 @@ python data_distill.py \
 评估模型：
 
 ```python
-!python evaluate.py \
+python evaluate.py \
     --model_path /content/sample_data/model_best \
     --test_path /content/drive/MyDrive/project/FewNer/data/student_data/dev_data.json \
     --task_type entity_extraction \
