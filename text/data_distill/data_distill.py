@@ -40,47 +40,53 @@ def do_data_distill():
         fp.write(json.dumps(label_maps, ensure_ascii=False))
 
     # Load doccano file and convert to distill format
-    sample_index = json.loads(
-        open(os.path.join(args.data_path, "sample_index.json"), "r", encoding="utf-8").readline()
-    )
+    # sample_index = json.loads(
+    #     open(os.path.join(args.data_path, "sample_index.json"), "r", encoding="utf-8").readline()
+    # )
 
-    train_ids = sample_index["train_ids"]
-    dev_ids = sample_index["dev_ids"]
-    test_ids = sample_index["test_ids"]
+    # train_ids = sample_index["train_ids"]
+    # dev_ids = sample_index["dev_ids"]
+    # test_ids = sample_index["test_ids"]
 
     if args.platform == "label_studio":
         with open(os.path.join(args.data_path, "label_studio.json"), "r", encoding="utf-8") as fp:
             json_lines = json.loads(fp.read())
     elif args.platform == "doccano":
         json_lines = []
-        with open(os.path.join(args.data_path, "doccano_ext.json"), "r", encoding="utf-8") as fp:
+        dev_lines = []
+        with open(os.path.join(args.data_path, "train_doccano.json"), "r", encoding="utf-8") as fp:
             for line in fp:
                 json_lines.append(json.loads(line))
+        with open(os.path.join(args.data_path, "dev_doccano.json"), "r", encoding="utf-8") as fp:
+            for line in fp:
+                dev_lines.append(json.loads(line))
     else:
         raise ValueError("Unsupported annotation platform!")
 
-    train_lines = [json_lines[i] for i in train_ids]
-    train_lines = anno2distill(train_lines, args.task_type, label_maps, args.platform)
+    # train_lines = [json_lines[i] for i in train_ids]
+    # train_lines = anno2distill(train_lines, args.task_type, label_maps, args.platform)
 
-    dev_lines = [json_lines[i] for i in dev_ids]
+    # test_lines = [json_lines[i] for i in test_ids]
+    # test_lines = anno2distill(test_lines, args.task_type, label_maps, args.platform)
+
+    train_lines = json_lines
+
     dev_lines = anno2distill(dev_lines, args.task_type, label_maps, args.platform)
-
-    test_lines = [json_lines[i] for i in test_ids]
-    test_lines = anno2distill(test_lines, args.task_type, label_maps, args.platform)
 
     # Load trained UIE model
     uie = Taskflow("information_extraction", schema=args.schema, task_path=args.model_path)
 
     if args.synthetic_ratio > 0:
         # Generate synthetic data
-        texts = open(os.path.join(args.data_path, "unlabeled_data.txt"), "r", encoding="utf-8").readlines()
+        # texts = open(os.path.join(args.data_path, "unlabeled_data.txt"), "r", encoding="utf-8").readlines()
 
-        actual_ratio = math.ceil(len(texts) / len(train_lines))
-        if actual_ratio <= args.synthetic_ratio or args.synthetic_ratio == -1:
-            infer_texts = texts
-        else:
-            idxs = random.sample(range(0, len(texts)), args.synthetic_ratio * len(train_lines))
-            infer_texts = [texts[i] for i in idxs]
+        # actual_ratio = math.ceil(len(texts) / len(train_lines))
+        # if actual_ratio <= args.synthetic_ratio or args.synthetic_ratio == -1:
+        #     infer_texts = texts
+        # else:
+        #     idxs = random.sample(range(0, len(texts)), args.synthetic_ratio * len(train_lines))
+        #     infer_texts = [texts[i] for i in idxs]
+        infer_texts = [line["text"] for line in train_lines]
 
         infer_results = []
         for text in tqdm(infer_texts, desc="Predicting: ", leave=False):
@@ -89,7 +95,7 @@ def do_data_distill():
         train_synthetic_lines = synthetic2distill(infer_texts, infer_results, args.task_type)
 
         # Concat origin and synthetic data
-        train_lines.extend(train_synthetic_lines)
+        # train_lines.extend(train_synthetic_lines)
 
     def _save_examples(save_dir, file_name, examples):
         count = 0
@@ -100,9 +106,9 @@ def do_data_distill():
                 count += 1
         logger.info("Save %d examples to %s." % (count, save_path))
 
-    _save_examples(args.save_dir, "train_data.json", train_lines)
+    _save_examples(args.save_dir, "train_data.json", train_synthetic_lines)
     _save_examples(args.save_dir, "dev_data.json", dev_lines)
-    _save_examples(args.save_dir, "test_data.json", test_lines)
+    # _save_examples(args.save_dir, "test_data.json", test_lines)
 
 
 if __name__ == "__main__":
@@ -121,8 +127,20 @@ if __name__ == "__main__":
     # yapf: enable
 
     # Define your schema here
-    schema = {"武器名称": ["产国", "类型", "研发单位"]}
-
+    # schema = {"武器名称": ["产国", "类型", "研发单位"]}
+    cluener_en_label2_zh = {
+      "organization": "组织",
+      "name":"人名",
+      "address":"地址",
+      "company":"公司",
+      "government":"政府",
+      "book":"书籍",
+      "game":"游戏",
+      "movie":"电影",
+      "position":"职位",
+      "scene":"景点",
+    }
+    schema = list(cluener_en_label2_zh.values())
     args.schema = schema
 
     do_data_distill()

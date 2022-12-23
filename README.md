@@ -355,6 +355,198 @@ print("="*100)
 python predict_to_file.py
 ```
 
+# 数据蒸馏
+
+text/process.py中的show_cluener_doccano_txt()用于统计转换后的test.txt里面实体的数目。
+
+```python
++--------+------+
+| 标签名 | 数目 |
++--------+------+
+|  组织  | 321  |
+|  人名  | 347  |
+|  地址  | 303  |
+|  公司  | 289  |
+|  政府  | 166  |
+|  书籍  | 103  |
+|  游戏  | 219  |
+|  电影  | 123  |
+|  职位  | 314  |
+|  景点  | 173  |
++--------+------+
+```
+
+这里数据蒸馏指的是首先利用少量标注的样本训练一个模型，然后再预测大量无标签的样本，最后将预测的结果加入到有标签的样本中继续训练。因此，这里选择test.txt作为有标签的样本，train_doccano.json里面的text作为未标注的数据，使用dev.txt作为验证数据。
+
+进入到text下，根据有标签的数据训练一个模型：
+
+```python
+!python finetune.py  \
+    --device gpu \
+    --logging_steps 100 \
+    --save_steps 100 \
+    --eval_steps 100 \
+    --seed 1000 \
+    --model_name_or_path uie-base \
+    --output_dir /content/sample_data \
+    --train_path ../data/cluener/test.txt \
+    --dev_path ../data/cluener/dev.txt  \
+    --max_seq_len 64  \
+    --per_device_train_batch_size  128 \
+    --per_device_eval_batch_size 128 \
+    --num_train_epochs 20 \
+    --learning_rate 1e-5 \
+    --do_train \
+    --do_eval \
+    --do_export \
+    --export_model_dir /content/sample_data/ \
+    --overwrite_output_dir \
+    --disable_tqdm True \
+    --metric_for_best_model eval_f1 \
+    --load_best_model_at_end  True \
+    --save_total_limit 1
+
+```
+
+验证：
+
+```python
+python evaluate.py \
+    --model_path /content/sample_data/checkpoint-1680 \
+    --test_path ../data/cluener/dev.txt \
+    --batch_size 128 \
+    --max_seq_len 64
+
+"""[2022-12-22 08:57:37,182] [    INFO] - Evaluation Precision: 0.79103 | Recall: 0.75781 | F1: 0.77406"""
+
+python evaluate.py \
+    --model_path /content/sample_data/checkpoint-1680 \
+    --test_path ../data/cluener/dev.txt \
+    --batch_size 128 \
+    --max_seq_len 64 \
+    --debug
+
+"""
+[2022-12-22 08:58:46,785] [    INFO] - -----------------------------
+[2022-12-22 08:58:46,785] [    INFO] - Class Name: 组织
+[2022-12-22 08:58:46,785] [    INFO] - Evaluation Precision: 0.87387 | Recall: 0.79292 | F1: 0.83143
+[2022-12-22 08:58:48,151] [    INFO] - -----------------------------
+[2022-12-22 08:58:48,151] [    INFO] - Class Name: 地址
+[2022-12-22 08:58:48,152] [    INFO] - Evaluation Precision: 0.83594 | Recall: 0.57373 | F1: 0.68045
+[2022-12-22 08:58:49,913] [    INFO] - -----------------------------
+[2022-12-22 08:58:49,913] [    INFO] - Class Name: 人名
+[2022-12-22 08:58:49,913] [    INFO] - Evaluation Precision: 0.93039 | Recall: 0.86237 | F1: 0.89509
+[2022-12-22 08:58:50,524] [    INFO] - -----------------------------
+[2022-12-22 08:58:50,525] [    INFO] - Class Name: 书籍
+[2022-12-22 08:58:50,525] [    INFO] - Evaluation Precision: 0.94393 | Recall: 0.65584 | F1: 0.77395
+[2022-12-22 08:58:51,933] [    INFO] - -----------------------------
+[2022-12-22 08:58:51,934] [    INFO] - Class Name: 公司
+[2022-12-22 08:58:51,934] [    INFO] - Evaluation Precision: 0.90909 | Recall: 0.79365 | F1: 0.84746
+[2022-12-22 08:58:52,448] [    INFO] - -----------------------------
+[2022-12-22 08:58:52,448] [    INFO] - Class Name: 电影
+[2022-12-22 08:58:52,448] [    INFO] - Evaluation Precision: 0.92000 | Recall: 0.76159 | F1: 0.83333
+[2022-12-22 08:58:53,539] [    INFO] - -----------------------------
+[2022-12-22 08:58:53,540] [    INFO] - Class Name: 游戏
+[2022-12-22 08:58:53,540] [    INFO] - Evaluation Precision: 0.89310 | Recall: 0.87797 | F1: 0.88547
+[2022-12-22 08:58:54,488] [    INFO] - -----------------------------
+[2022-12-22 08:58:54,488] [    INFO] - Class Name: 政府
+[2022-12-22 08:58:54,488] [    INFO] - Evaluation Precision: 0.91220 | Recall: 0.75709 | F1: 0.82743
+[2022-12-22 08:58:56,222] [    INFO] - -----------------------------
+[2022-12-22 08:58:56,222] [    INFO] - Class Name: 职位
+[2022-12-22 08:58:56,222] [    INFO] - Evaluation Precision: 0.86352 | Recall: 0.75982 | F1: 0.80835
+[2022-12-22 08:58:56,853] [    INFO] - -----------------------------
+[2022-12-22 08:58:56,853] [    INFO] - Class Name: 景点
+[2022-12-22 08:58:56,854] [    INFO] - Evaluation Precision: 0.78443 | Recall: 0.62679 | F1: 0.69681
+"""
+```
+
+进入到data_distill下，先获取蒸馏数据，运行：
+
+```python
+python data_distill.py \
+    --data_path /content/drive/MyDrive/project/FewNer/data/cluener/\
+    --save_dir /content/drive/MyDrive/project/FewNer/data/student_data \
+    --task_type entity_extraction \
+    --synthetic_ratio 10 \
+    --platform doccano \
+    --model_path /content/drive/MyDrive/project/FewNer/checkpoint-1680
+
+"""
+[2022-12-22 14:57:07,879] [    INFO] - We are using <class 'paddlenlp.transformers.ernie.tokenizer.ErnieTokenizer'> to load '/content/drive/MyDrive/project/FewNer/checkpoint-1680'.
+[2022-12-22 15:50:49,221] [    INFO] - Save 10748 examples to /content/drive/MyDrive/project/FewNer/data/student_data/train_data.json.
+[2022-12-22 15:50:49,970] [    INFO] - Save 1343 examples to /content/drive/MyDrive/project/FewNer/data/student_data/dev_data.json.
+"""
+```
+
+评估教师模型：
+
+```python
+!python evaluate_teacher.py \
+    --task_type entity_extraction \
+    --test_path /content/drive/MyDrive/project/FewNer/data/student_data/dev_data.json \
+    --label_maps_path /content/drive/MyDrive/project/FewNer/data/student_data/label_maps.json \
+    --model_path /content/drive/MyDrive/project/FewNer/checkpoint-1680 \
+    --batch_size 128 \
+    --max_seq_len 64
+
+"""
+[2022-12-22 10:47:52,620] [    INFO] - Evaluation precision: {'entity_f1': 0.77394, 'entity_precision': 0.79076, 'entity_recall': 0.75781}
+"""
+```
+
+根据预测的数据训练模型：
+
+```python
+!python train.py \
+    --task_type entity_extraction \
+    --train_path /content/drive/MyDrive/project/FewNer/data/student_data/train_data.json \
+    --dev_path /content/drive/MyDrive/project/FewNer/data/student_data/dev_data.json \
+    --label_maps_path /content/drive/MyDrive/project/FewNer/data/student_data/label_maps.json \
+    --num_epochs 50 \
+    --encoder ernie-3.0-mini-zh \
+    --batch_size 128 \
+    --max_seq_len 64 \
+    --device gpu \
+    --logging_steps 10 \
+    --eval_steps 200 \
+    --save_dir /content/sample_data/
+```
+
+评估模型：
+
+```python
+!python evaluate.py \
+    --model_path /content/sample_data/model_best \
+    --test_path /content/drive/MyDrive/project/FewNer/data/student_data/dev_data.json \
+    --task_type entity_extraction \
+    --label_maps_path /content/drive/MyDrive/project/FewNer/data/student_data/label_maps.json \
+    --encoder ernie-3.0-mini-zh
+
+"""
+Evaluation precision: {'entity_f1': 0.76643, 'entity_precision': 0.80335, 'entity_recall': 0.73275}
+"""
+```
+
+发现并没有比之前的好，可能的原因是在**继续训练的时候，没有加入之前有标注的数据，而是直接采用预测的数据。**
+
+使用模型进行预测：
+
+```python
+from pprint import pprint
+from paddlenlp import Taskflow
+
+my_ie = Taskflow("information_extraction", model="uie-data-distill-gp", task_path="/content/sample_data/model_best") # Schema is fixed in closed-domain information extraction
+pprint(my_ie("威尔哥（Virgo）减速炸弹是由瑞典FFV军械公司专门为瑞典皇家空军的攻击机实施低空高速轰炸而研制，1956年开始研制，1963年进入服役，装备于A32“矛盾”、A35“龙”、和AJ134“雷”攻击机，主要用于攻击登陆艇、停放的飞机、高炮、野战火炮、轻型防护装甲车辆以及有生力量。"))
+
+"""
+[{'公司': [{'end': 25,
+          'probability': 0.9994653,
+          'start': 16,
+          'text': '瑞典FFV军械公司'}],
+  '政府': [{'end': 34, 'probability': 0.9953176, 'start': 28, 'text': '瑞典皇家空军'}]}]
+"""
+```
+
 # 参考
 
 > [CLUEbenchmark/CLUENER2020: CLUENER2020 中文细粒度命名实体识别 Fine Grained Named Entity Recognition (github.com)](https://github.com/CLUEbenchmark/CLUENER2020)

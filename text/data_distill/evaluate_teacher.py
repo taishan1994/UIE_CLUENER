@@ -88,8 +88,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # yapf: enable
 
-    schema = {"武器名称": ["产国", "类型", "研发单位"]}
-
+    cluener_en_label2_zh = {
+        "organization": "组织",
+        "name": "人名",
+        "address": "地址",
+        "company": "公司",
+        "government": "政府",
+        "book": "书籍",
+        "game": "游戏",
+        "movie": "电影",
+        "position": "职位",
+        "scene": "景点",
+    }
+    schema = list(cluener_en_label2_zh.values())
     args.schema = schema
 
     do_eval()
