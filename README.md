@@ -296,7 +296,7 @@ python evaluate.py \
 """
 ```
 
-可自行上传到[CLUE2020榜单]((https://www.cluebenchmarks.com/ner.html)进行测试。
+可自行上传到[CLUE2020榜单](https://www.cluebenchmarks.com/ner.html)进行测试。
 
 预测：
 
