@@ -296,14 +296,7 @@ python evaluate.py \
 """
 ```
 
-这里和CLUENER2020那里的结果进行比较：
-
-| 模型                  | [线上效果f1](https://www.cluebenchmarks.com/ner.html) |
-| --------------------- | ----------------------------------------------------- |
-| Bert-base             | 78.82                                                 |
-| RoBERTa-wwm-large-ext | 80.42                                                 |
-| Bi-Lstm + CRF         | 70.00                                                 |
-| UIE                   | 81.66                                                 |
+可自行上传到[CLUE2020榜单]((https://www.cluebenchmarks.com/ner.html)进行测试。
 
 预测：
 
